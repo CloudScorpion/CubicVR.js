@@ -23,6 +23,9 @@
                         //objects
                         var objectArray = [];
                         var objectsMove;
+                        
+                       
+                       
 			
                         var lastTime = 0;
 
@@ -298,15 +301,29 @@
                                         
                                         tobj.opPulse = false;
                                         tobj.szPulse = false;
+                                        /*
                                         tobj.dfMap = false;
                                         tobj.spMap = false;
                                         tobj.nmMap = false;
                                         tobj.dfMove = false;
                                         tobj.spMove = false;
                                         tobj.nmMove = false;
-                                        tobj.dfURL = "";
+                                        */
+                                        tobj.dfVal = "1,1,1";
+                                        tobj.clVal = "1,1,1";
+                                        tobj.clURL = "";
+                                        tobj.spVal = "0.5,0.5,0.5";
                                         tobj.spURL = "";
+                                        tobj.amVal = "0,0,0";
+                                        tobj.amURL = "";
+                                        tobj.alVal = "1";
+                                        tobj.alURL = "";
+                                        tobj.shVal = "1";
+                                        tobj.saVal = "60";
                                         tobj.nmURL = "";
+                                        tobj.bmURL = "";
+                                        tobj.rfURL = "";
+                                        tobj.esURL = "";
                                         
                                         objectArray.push(tobj);
                                         
@@ -362,6 +379,10 @@
                                document.getElementById("objectOpacity").value = "1.0";
                                document.getElementById("objectOpPulse").checked = false;
                                document.getElementById("objectSzPulse").checked = false;
+                               document.getElementById("materialIdentDD").selectedIndex = -1;
+                               document.getElementById("materialValue").value = "";
+                               document.getElementById("materialTexture").value = "";
+                               /*
                                document.getElementById("objectUseDiff").checked = false;
                                document.getElementById("objectMoveDiff").checked = false;
                                document.getElementById("objectDiffURL").value = "";
@@ -371,7 +392,7 @@
                                document.getElementById("objectUseNorm").checked = false;
                                document.getElementById("objectMoveNorm").checked = false;
                                document.getElementById("objectNormURL").value = "";
-                               
+                               */
                             }
                             
                         function swapObject()
@@ -383,6 +404,10 @@
                             document.getElementById("objectOpacity").value = objectArray[index].mat.opacity;
                             document.getElementById("objectOpPulse").checked = objectArray[index].opPulse;
                             document.getElementById("objectSzPulse").checked = objectArray[index].szPulse;
+                            document.getElementById("materialIdentDD").selectedIndex = -1;
+                            document.getElementById("materialValue").value = "";
+                            document.getElementById("materialTexture").value = "";
+                            /*
                             document.getElementById("objectUseDiff").checked = objectArray[index].dfMap;
                             document.getElementById("objectMoveDiff").checked = objectArray[index].dfMove;
                             document.getElementById("objectDiffURL").value = objectArray[index].dfURL;
@@ -392,27 +417,167 @@
                             document.getElementById("objectUseNorm").checked = objectArray[index].nmMap;
                             document.getElementById("objectMoveNorm").checked = objectArray[index].nmMove;
                             document.getElementById("objectNormURL").value = objectArray[index].nmURL;
+                            */
                             }
+                            
+               
                             
                         function updateObject()
                             {
                             var index = parseInt(document.getElementById("objectIdentDD").selectedIndex) - 1;
+                            var matIndex = parseInt(document.getElementById("materialIdentDD").value);
                             
                             var obj = objectArray[index];
                             
                             //toggle switches
                             obj.opPulse = document.getElementById("objectOpPulse").checked;
                             obj.szPulse = document.getElementById("objectSzPulse").checked;
-                            obj.dfMove = document.getElementById("objectMoveDiff").checked;
-                            obj.spMove = document.getElementById("objectMoveSpec").checked;
-                            obj.nmMove = document.getElementById("objectMoveNorm").checked;
+                            //obj.dfMove = document.getElementById("objectMoveDiff").checked;
+                            //obj.spMove = document.getElementById("objectMoveSpec").checked;
+                            //obj.nmMove = document.getElementById("objectMoveNorm").checked;
                             
                             //update basics
                             obj.sObj.position = document.getElementById("objectPos").value.split(",");
                             obj.sObj.scale = document.getElementById("objectSize").value.split(",");
                             obj.mat.opacity = document.getElementById("objectOpacity").value;
                             
+                            //pull values
+                            var val = document.getElementById("materialValue").value;
+                            var url = document.getElementById("materialTexture").value;
+                            
+                            switch(matIndex)
+                                {
+                                case 1:
+                                    obj.dfVal = val;
+                                    var vaAr = val.split(',',3);
+                                    for (i in vaAr)
+                                        {
+                                        obj.mat.diffuse[i] = parseFloat(vaAr[i],10);
+                                        }
+                                    break;
+                                case 2:
+                                    obj.clVal = val;
+                                    var vaAr = val.split(',',3);
+                                    for (i in vaAr)
+                                        {
+                                        obj.mat.color[i] = parseFloat(vaAr[i],10);
+                                        }
+                                    if(url !== obj.clURL)
+                                        {
+                                        obj.clURL = url;    
+                                        
+                                        if(url !== "")    
+                                            obj.mat.setTexture(new CubicVR.Texture(url), CubicVR.enums.texture.map.COLOR);
+                                        else
+                                            obj.mat.setTexture(undefined,CubicVR.enums.texture.map.COLOR);
+
+                                        }
+                                    break;
+                                case 3:
+                                    obj.spVal = val;
+                                    var vaAr = val.split(',',3);
+                                    for (i in vaAr)
+                                        {
+                                        obj.mat.specular[i] = parseFloat(vaAr[i],10);
+                                        }
+                                    if(url !== obj.spURL)
+                                        {
+                                        obj.spURL = url;         
+                                        
+                                        if(url !== "")    
+                                            obj.mat.setTexture(new CubicVR.Texture(url), CubicVR.enums.texture.map.SPECULAR);
+                                        else
+                                            obj.mat.setTexture(undefined,CubicVR.enums.texture.map.SPECULAR);
+                                        }
+                                    break;
+                                case 4:
+                                    obj.amVal = val;
+                                    var vaAr = val.split(',',3);
+                                    for (i in vaAr)
+                                        {
+                                        obj.mat.ambient[i] = parseFloat(vaAr[i],10);
+                                        }
+                                    if(url !== obj.amURL)
+                                        {
+                                        obj.amURL = url;     
+                                        
+                                        if(url !== "")    
+                                            obj.mat.setTexture(new CubicVR.Texture(url), CubicVR.enums.texture.map.AMBIENT);
+                                        else
+                                            obj.mat.setTexture(undefined,CubicVR.enums.texture.map.AMBIENT);
+                                        }
+                                    break;
+                                case 5:
+                                    obj.alVal = val;
+                                    obj.mat.opacity = parseFloat(val,10);
+                                    
+                                    if(url !== obj.alURL)
+                                        {
+                                        obj.alURL = url;     
+                                        
+                                        if(url !== "")    
+                                            obj.mat.setTexture(new CubicVR.Texture(url), CubicVR.enums.texture.map.ALPHA);
+                                        else
+                                            obj.mat.setTexture(undefined,CubicVR.enums.texture.map.ALPHA);
+                                        }
+                                    break;
+                                case 6:
+                                    obj.shVal = val;
+                                    obj.mat.shininess = parseFloat(vaAr,10);
+                                    
+                                    break;
+                                case 7:
+                                    obj.saVal = val;
+                                    obj.mat.max_smooth = parseFloat(vaAr,10);
+                                    break;
+                                case 8:
+                                    if(url !== obj.nmURL)
+                                        {
+                                        obj.nmURL = url;     
+                                        
+                                        if(url !== "")    
+                                            obj.mat.setTexture(new CubicVR.Texture(url), CubicVR.enums.texture.map.NORMAL);
+                                        else
+                                            obj.mat.setTexture(undefined,CubicVR.enums.texture.map.NORMAL);
+                                        }
+                                    break;
+                                case 9:
+                                    if(url !== obj.bmURL)
+                                        {
+                                        obj.bmURL = url;     
+                                        
+                                        if(url !== "")    
+                                            obj.mat.setTexture(new CubicVR.Texture(url), CubicVR.enums.texture.map.BUMP);
+                                        else
+                                            obj.mat.setTexture(undefined,CubicVR.enums.texture.map.BUMP);
+                                        }
+                                    break;
+                                case 10:
+                                    if(url !== obj.rfURL)
+                                        {
+                                        obj.rfURL = url;     
+                                        
+                                        if(url !== "")    
+                                            obj.mat.setTexture(new CubicVR.Texture(url), CubicVR.enums.texture.map.REFLECT);
+                                        else
+                                            obj.mat.setTexture(undefined,CubicVR.enums.texture.map.REFLECT);
+                                        }
+                                    break;
+                                case 11:
+                                    if(url !== obj.esURL)
+                                        {
+                                        obj.esURL = url;     
+                                        
+                                        if(url !== "")    
+                                            obj.mat.setTexture(new CubicVR.Texture(url), CubicVR.enums.texture.map.ENVSPHERE);
+                                        else
+                                            obj.mat.setTexture(undefined,CubicVR.enums.texture.map.ENVSPHERE);
+                                        }
+                                    break;
+                                }
+                            
                             //texture maps
+                            /*
                             var useDiff = document.getElementById("objectUseDiff").checked;
                             var diffURL = document.getElementById("objectDiffURL").value;
                             var diffUp = false;
@@ -477,13 +642,104 @@
                                     obj.mat.setTexture(new CubicVR.Texture(normURL), CubicVR.enums.texture.map.NORMAL);
                                 else
                                     obj.mat.setTexture(undefined,CubicVR.enums.texture.map.NORMAL);
-                                }
+                                }*/
                             
                             }
                             
+                        function swapMaterial()
+                            {
+                            var index = parseInt(document.getElementById("materialIdentDD").value);
+                            var value = document.getElementById("materialValue");
+                            var texture = document.getElementById("materialTexture");
+                            
+                            var obj = objectArray[parseInt(document.getElementById("objectIdentDD").selectedIndex) - 1];
                             
                             
                             
+                            switch(index)
+                                {
+                                case 1:
+                                    value.disabled = false;
+                                    value.value = obj.dfVal;
+                                    texture.disabled = true;
+                                    texture.value = "";
+                                    break;
+                                case 2:
+                                    value.disabled = false;
+                                    value.value = obj.clVal;
+                                    texture.disabled = false;
+                                    texture.value = obj.clURL;
+                                    break;
+                                case 3:
+                                    value.disabled = false;
+                                    value.value = obj.spVal;
+                                    texture.disabled = false;
+                                    texture.value = obj.spURL;
+                                    break;
+                                case 4:
+                                    value.disabled = false;
+                                    value.value = obj.amVal;
+                                    texture.disabled = false;
+                                    texture.value = obj.amURL;
+                                    break;
+                                case 5:
+                                    value.disabled = false;
+                                    value.value = obj.alVal;
+                                    texture.disabled = false;
+                                    texture.value = obj.alURL;
+                                    break;
+                                case 6:
+                                    value.disabled = false;
+                                    value.value = obj.shVal;
+                                    texture.disabled = true;
+                                    texture.value = "";
+                                    break;
+                                case 7:
+                                    value.disabled = false;
+                                    value.value = obj.saVal;
+                                    texture.disabled = true;
+                                    texture.value = "";
+                                    break;
+                                case 8:
+                                    value.disabled = true;
+                                    value.value = "";
+                                    texture.disabled = false;
+                                    texture.value = obj.nmURL;
+                                    break;
+                                case 9:
+                                    value.disabled = true;
+                                    value.value = "";
+                                    texture.disabled = false;
+                                    texture.value = obj.bmURL;
+                                    break;
+                                case 10:
+                                    value.disabled = true;
+                                    value.value = "";
+                                    texture.disabled = false;
+                                    texture.value = obj.rfURL;
+                                    break;
+                                case 11:
+                                    value.disabled = true;
+                                    value.value = "";
+                                    texture.disabled = false;
+                                    texture.value = obj.esURL;
+                                    break;
+                                
+                                }
+                            /*
+                            document.getElementById("objectUseDiff").checked = objectArray[index].dfMap;
+                            document.getElementById("objectMoveDiff").checked = objectArray[index].dfMove;
+                            document.getElementById("objectDiffURL").value = objectArray[index].dfURL;
+                            document.getElementById("objectUseSpec").checked = objectArray[index].spMap;
+                            document.getElementById("objectMoveSpec").checked = objectArray[index].spMove;
+                            document.getElementById("objectSpecURL").value = objectArray[index].spURL;
+                            document.getElementById("objectUseNorm").checked = objectArray[index].nmMap;
+                            document.getElementById("objectMoveNorm").checked = objectArray[index].nmMove;
+                            document.getElementById("objectNormURL").value = objectArray[index].nmURL;
+                            */
+                            }
+                            
+                        //Camera Controls    
 			var mpos = [0,0]
 			var mdown = false;
 			
@@ -556,6 +812,22 @@
                     Opacity Pulse: <input type="checkbox" id="objectOpPulse" />
                     Size Pulse: <input type="checkbox" id="objectSzPulse" />
                     <br />
+                    Material: <select id="materialIdentDD" onchange="swapMaterial()">
+                        <option value="1">Diffuse</option>
+                        <option value="2">Color</option>
+                        <option value="3">Specular</option>
+                        <option value="4">Ambient</option>
+                        <option value="5">Alpha</option>
+                        <option value="6">Shininess</option>
+                        <option value="7">Smooth Angle</option>
+                        <option value="8">Normal</option>
+                        <option value="9">Bump</option>
+                        <option value="10">Reflect</option>
+                        <option value="11">Envsphere</option>
+                    </select>&nbsp;
+                    &nbsp;Value:&nbsp;<input type="text" id="materialValue" size="12"/>
+                    &nbsp;Texture:&nbsp;<input type="text" id="materialTexture">&nbsp;
+                    <!--
                     Diffuse Map: &nbsp;<input type="checkbox" id="objectUseDiff" />&nbsp;
                     &nbsp;Moving Diffuse:&nbsp; <input type="checkbox" id="objectMoveDiff" disabled="true" />&nbsp;
                     &nbsp;Diffuse URL: &nbsp;<input type="text" id="objectDiffURL" />&nbsp;
@@ -568,6 +840,7 @@
                     Normal Map: <input type="checkbox" id="objectUseNorm" />&nbsp;
                     &nbsp; Moving Normal: <input type="checkbox" id="objectMoveNorm" disabled="true"/>&nbsp;
                     &nbsp;Normal URL: <input type="test" id="objectNormURL" />&nbsp;
+                    -->
                     &nbsp;<input type="button" id="objectApplyButton" value="Update" onclick="updateObject();" />
                     </div>
                 </div>
