@@ -62,7 +62,7 @@
         var canvas = document.getElementById("cubicvr-canvas");
         init_gl(canvas);
 
-        octree = new CubicVR.Octree(400, 6);
+        octree = new CubicVR.Octree({size: 400, depth: 6});
         scene = new CubicVR.Scene(canvas.width, canvas.height, 40, 0.1, 200, octree);
 
         box_material = new CubicVR.Material("test");

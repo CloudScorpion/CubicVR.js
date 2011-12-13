@@ -1,4 +1,3 @@
-
 CubicVR.RegisterModule("Math",function (base) {
 
   var undef = base.undef;
@@ -117,46 +116,57 @@ CubicVR.RegisterModule("Math",function (base) {
 
       return U;
     },
-	  linePlaneIntersect: function(normal, point_on_plane, segment_start, segment_end)
-	  {
+          linePlaneIntersect: function(normal, point_on_plane, segment_start, segment_end)
+          {
     // form a plane from normal and point_on_plane and test segment start->end to find intersect point
-		  var denom,mu;
-		
-		  var d = - normal[0] * point_on_plane[0] - normal[1] * point_on_plane[1] - normal[2] * point_on_plane[2];
-		
-		  // calculate position where the plane intersects the segment
-		  denom = normal[0] * (segment_end[0] - segment_start[0]) + normal[1] * (segment_end[1] - segment_start[1]) + normal[2] * (segment_end[2] - segment_start[2]);
+                  var denom,mu;
+
+                  var d = - normal[0] * point_on_plane[0] - normal[1] * point_on_plane[1] - normal[2] * point_on_plane[2];
+
+                  // calculate position where the plane intersects the segment
+                  denom = normal[0] * (segment_end[0] - segment_start[0]) + normal[1] * (segment_end[1] - segment_start[1]) + normal[2] * (segment_end[2] - segment_start[2]);
       if (Math.abs(denom) < 0.001) return false;
-		
-		  mu = - (d + normal[0] * segment_start[0] + normal[1] * segment_start[1] + normal[2] * segment_start[2]) / denom;
-		  return [
-					     (segment_start[0] + mu * (segment_end[0] - segment_start[0])),
-					     (segment_start[1] + mu * (segment_end[1] - segment_start[1])),
-					     (segment_start[2] + mu * (segment_end[2] - segment_start[2]))
-					    ];
-	  }
+
+                  mu = - (d + normal[0] * segment_start[0] + normal[1] * segment_start[1] + normal[2] * segment_start[2]) / denom;
+                  return [
+                                             (segment_start[0] + mu * (segment_end[0] - segment_start[0])),
+                                             (segment_start[1] + mu * (segment_end[1] - segment_start[1])),
+                                             (segment_start[2] + mu * (segment_end[2] - segment_start[2]))
+                                            ];
+          }
   };
 
   var triangle = {
     normal: function(pt1, pt2, pt3, mOut) {
       if (mOut === undef) mOut = [];
-      
+
       var v10 = pt1[0] - pt2[0];
       var v11 = pt1[1] - pt2[1];
       var v12 = pt1[2] - pt2[2];
       var v20 = pt2[0] - pt3[0];
       var v21 = pt2[1] - pt3[1];
       var v22 = pt2[2] - pt3[2];
-      
+
       mOut[0] = v11 * v22 - v12 * v21;
       mOut[1] = v12 * v20 - v10 * v22;
       mOut[2] = v10 * v21 - v11 * v20;
-      
+
       return mOut;
+    },
+    classifyPoint: function (plane, pt) {
+      var dist = (plane[0] * pt[0]) + (plane[1] * pt[1]) + (plane[2] * pt[2]) + (plane[3]);
+      if (dist < 0) {
+        return -1;
+      }
+      else if (dist > 0) {
+        return 1;
+      }
+      return 0;
     }
+    
   };
-  
-  
+
+
   var mat3 = {
     transpose_inline: function(mat) {
         var a01 = mat[1], a02 = mat[2], a12 = mat[5];
@@ -314,7 +324,7 @@ CubicVR.RegisterModule("Math",function (base) {
 
           return dest;
       },
-      
+
       inverse: function (m,m_inv) {
 
           var a0 = m[0] * m[5] - m[1] * m[4];
@@ -334,7 +344,7 @@ CubicVR.RegisterModule("Math",function (base) {
 
           if (determinant !== 0) {
               if (m_inv === undef) m_inv = [];
-              
+
               m_inv[0] = 0 + m[5] * b5 - m[6] * b4 + m[7] * b3;
               m_inv[4] = 0 - m[4] * b5 + m[6] * b2 - m[7] * b1;
               m_inv[8] = 0 + m[4] * b4 - m[5] * b2 + m[7] * b0;
@@ -374,20 +384,20 @@ CubicVR.RegisterModule("Math",function (base) {
               return m_inv;
           }
 
-          return null; 
+          return null;
       },
-      
+
    identity: function(mOut) {
-     if (mOut == undef) { 
+     if (mOut == undef) {
        return [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0];
      }
-     
-     mOut[0] = 1.0;  mOut[1] = 0.0;  mOut[2] = 0.0;  mOut[3] = 0.0; 
-     mOut[4] = 0.0;  mOut[5] = 1.0;  mOut[6] = 0.0;  mOut[7] = 0.0; 
-     mOut[8] = 0.0;  mOut[9] = 0.0;  mOut[10] = 1.0; mOut[11] = 0.0; 
-     mOut[12] = 0.0; mOut[13] = 0.0; mOut[14] = 0.0; mOut[15] = 1.0;        
+
+     mOut[0] = 1.0;  mOut[1] = 0.0;  mOut[2] = 0.0;  mOut[3] = 0.0;
+     mOut[4] = 0.0;  mOut[5] = 1.0;  mOut[6] = 0.0;  mOut[7] = 0.0;
+     mOut[8] = 0.0;  mOut[9] = 0.0;  mOut[10] = 1.0; mOut[11] = 0.0;
+     mOut[12] = 0.0; mOut[13] = 0.0; mOut[14] = 0.0; mOut[15] = 1.0;
    },
-           
+
    translate: function(x, y, z, mOut) {
       var m = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, x,   y,   z, 1.0];
 
@@ -397,16 +407,16 @@ CubicVR.RegisterModule("Math",function (base) {
    },
 
    rotateAxis: function(r, x, y, z, mOut) {   // rotate r about axis x,y,z
-	    var sAng = Math.sin(r*(Math.PI/180.0));
-	    var cAng = Math.cos(r*(Math.PI/180.0));
-      
+            var sAng = Math.sin(r*(Math.PI/180.0));
+            var cAng = Math.cos(r*(Math.PI/180.0));
+
       var m = [ cAng+(x*x)*(1.0-cAng), x*y*(1.0-cAng) - z*sAng, x*z*(1.0-cAng) + y*sAng, 0,
                   y*x*(1.0-cAng)+z*sAng, cAng + y*y*(1.0-cAng), y*z*(1.0-cAng)-x*sAng, 0,
-                  z*x*(1.0-cAng)-y*sAng, z*y*(1-cAng)+x*sAng, cAng+(z*z)*(1.0-cAng), 0, 
+                  z*x*(1.0-cAng)-y*sAng, z*y*(1-cAng)+x*sAng, cAng+(z*z)*(1.0-cAng), 0,
                   0, 0, 0, 1 ];
-	
-	    if (mOut === undef) return m;
-	
+
+            if (mOut === undef) return m;
+
       mat4.multiply(mOut.slice(0),m,mOut);
    },
 
@@ -415,38 +425,38 @@ CubicVR.RegisterModule("Math",function (base) {
       if (mOut === undef) {
         mOut = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0];
       }
-         
-	    if (z!==0) {
-	      sAng = Math.sin(z*(Math.PI/180.0));
-	      cAng = Math.cos(z*(Math.PI/180.0));
+
+            if (z!==0) {
+              sAng = Math.sin(z*(Math.PI/180.0));
+              cAng = Math.cos(z*(Math.PI/180.0));
 
         mat4.multiply(mOut.slice(0),[cAng, sAng, 0.0, 0.0, -sAng, cAng, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0],mOut);
-	    }
-	    
-	    if (y!==0) {
-	      sAng = Math.sin(y*(Math.PI/180.0));
-	      cAng = Math.cos(y*(Math.PI/180.0));
+            }
+
+            if (y!==0) {
+              sAng = Math.sin(y*(Math.PI/180.0));
+              cAng = Math.cos(y*(Math.PI/180.0));
 
         mat4.multiply(mOut.slice(0),[cAng, 0.0, -sAng, 0.0, 0.0, 1.0, 0.0, 0.0, sAng, 0.0, cAng, 0.0, 0.0, 0.0, 0.0, 1.0],mOut);
-	    }
-	    
-	    if (x!==0) {
-	      sAng = Math.sin(x*(Math.PI/180.0));
-	      cAng = Math.cos(x*(Math.PI/180.0));
-                
+            }
+
+            if (x!==0) {
+              sAng = Math.sin(x*(Math.PI/180.0));
+              cAng = Math.cos(x*(Math.PI/180.0));
+
         mat4.multiply(mOut.slice(0),[1.0, 0.0, 0.0, 0.0, 0.0, cAng, sAng, 0.0, 0.0, -sAng, cAng, 0.0, 0.0, 0.0, 0.0, 1.0],mOut);
-	    }
-	    
-	    return mOut;
+            }
+
+            return mOut;
    },
 
-   scale: function(x, y, z, mOut) {    
+   scale: function(x, y, z, mOut) {
      if (mOut === undef) return [x, 0.0, 0.0, 0.0, 0.0, y, 0.0, 0.0, 0.0, 0.0, z, 0.0, 0.0, 0.0, 0.0, 1.0];
-    
+
       mat4.multiply(mOut.slice(0),[x, 0.0, 0.0, 0.0, 0.0, y, 0.0, 0.0, 0.0, 0.0, z, 0.0, 0.0, 0.0, 0.0, 1.0],mOut);
-   }       
+   }
   };
-  
+
   /* Transform Controller */
 
   function Transform(init_mat) {
@@ -471,29 +481,29 @@ CubicVR.RegisterModule("Math",function (base) {
         this.result = null;
         return this;
       },
-      
+
       getResult: function() {
         var mat4 = CubicVR.mat4;
         if (!this.c_stack) {
           return this.m_stack[0];
         }
-        
+
         var m = cubicvr_identity;
-        
+
         if (this.valid > this.c_stack-1) this.valid = this.c_stack-1;
-                    
+
         for (var i = this.valid; i < this.c_stack+1; i++) {
           m = mat4.multiply(m,this.m_stack[i]);
           this.m_cache[i] = m;
         }
-          
+
         this.valid = this.c_stack-1;
-          
+
         this.result = this.m_cache[this.c_stack];
-        
+
         return this.result;
       },
-      
+
       pushMatrix: function(m) {
         this.c_stack++;
         this.m_stack[this.c_stack] = (m ? m : cubicvr_identity);
@@ -621,7 +631,7 @@ CubicVR.RegisterModule("Math",function (base) {
         return this;
       }
   };
-  
+
   /* Quaternions */
   function Quaternion() {
     if (arguments.length === 1) {
@@ -639,7 +649,7 @@ CubicVR.RegisterModule("Math",function (base) {
   }
 
   Quaternion.prototype = {
-  
+
     length: function() {
       return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
     },
@@ -663,19 +673,19 @@ CubicVR.RegisterModule("Math",function (base) {
         Z = ( mat[4] - mat[1] ) / S;
         W = 0.25 * S;
       } else {
-        if ( mat[0] > mat[5] && mat[0] > mat[10] )  {	// Column 0: 
+        if ( mat[0] > mat[5] && mat[0] > mat[10] )  {   // Column 0:
             S  = Math.sqrt( 1.0 + mat[0] - mat[5] - mat[10] ) * 2;
             X = 0.25 * S;
             Y = (mat[4] + mat[1] ) / S;
             Z = (mat[2] + mat[8] ) / S;
             W = (mat[9] - mat[6] ) / S;
-        } else if ( mat[5] > mat[10] ) {			// Column 1: 
+        } else if ( mat[5] > mat[10] ) {                        // Column 1:
             S  = Math.sqrt( 1.0 + mat[5] - mat[0] - mat[10] ) * 2;
             X = (mat[4] + mat[1] ) / S;
             Y = 0.25 * S;
             Z = (mat[9] + mat[6] ) / S;
             W = (mat[2] - mat[8] ) / S;
-        } else {						// Column 2:
+        } else {                                                // Column 2:
             S  = Math.sqrt( 1.0 + mat[10] - mat[0] - mat[5] ) * 2;
             X = (mat[2] + mat[8] ) / S;
             Y = (mat[9] + mat[6] ) / S;
@@ -687,7 +697,7 @@ CubicVR.RegisterModule("Math",function (base) {
      this.x = X;
      this.y = Y;
      this.z = Z;
-     this.w = W;        
+     this.w = W;
     },
 
     fromEuler: function(bank, heading, pitch) // x,y,z
@@ -743,7 +753,7 @@ CubicVR.RegisterModule("Math",function (base) {
       }
     }
   };
-  
+
   var aabb = {
     engulf: function (aabb, point) {
       if (aabb[0][0] > point[0]) {
@@ -781,6 +791,62 @@ CubicVR.RegisterModule("Math",function (base) {
       var y = aabb[0][1] < aabb[1][1] ? aabb[1][1] - aabb[0][1] : aabb[0][1] - aabb[1][1];
       var z = aabb[0][2] < aabb[1][2] ? aabb[1][2] - aabb[0][2] : aabb[0][2] - aabb[1][2];
       return [x,y,z];
+    },
+  
+    containsPoint: function ( aabb, point ) {
+      return    point[0] <= aabb[1][0]
+            &&  point[1] <= aabb[1][1]
+            &&  point[2] <= aabb[1][2]
+            &&  point[0] >= aabb[0][0]
+            &&  point[1] >= aabb[0][1]
+            &&  point[2] >= aabb[0][2];
+    },
+    overlaps: function ( aabb1, aabb2 ) {
+      // thanks flipcode! http://www.flipcode.com/archives/2D_OBB_Intersection.shtml
+
+      for ( var axis=0; axis<3; ++axis ) {
+        var t = dot(aabb1[0], bases[axis]);
+        var tmin = 1000000000000000000, tmax = -1000000000000000;
+
+        //unrolled
+        t = dot([aabb2[0][0], aabb2[0][1], aabb2[0][2]], bases[axis]);
+        tmin = t < tmin ? t : tmin;
+        tmax = t > tmax ? t : tmax;
+        t = dot([aabb2[1][0], aabb2[0][1], aabb2[0][2]], bases[axis]);
+        tmin = t < tmin ? t : tmin;
+        tmax = t > tmax ? t : tmax;
+        t = dot([aabb2[0][0], aabb2[1][1], aabb2[0][2]], bases[axis]);
+        tmin = t < tmin ? t : tmin;
+        tmax = t > tmax ? t : tmax;
+        t = dot([aabb2[1][0], aabb2[1][1], aabb2[0][2]], bases[axis]);
+        tmin = t < tmin ? t : tmin;
+        tmax = t > tmax ? t : tmax;
+        t = dot([aabb2[0][0], aabb2[0][1], aabb2[1][2]], bases[axis]);
+        tmin = t < tmin ? t : tmin;
+        tmax = t > tmax ? t : tmax;
+        t = dot([aabb2[1][0], aabb2[0][1], aabb2[1][2]], bases[axis]);
+        tmin = t < tmin ? t : tmin;
+        tmax = t > tmax ? t : tmax;
+        t = dot([aabb2[0][0], aabb2[1][1], aabb2[1][2]], bases[axis]);
+        tmin = t < tmin ? t : tmin;
+        tmax = t > tmax ? t : tmax;
+        t = dot([aabb2[1][0], aabb2[1][1], aabb2[1][2]], bases[axis]);
+        tmin = t < tmin ? t : tmin;
+        tmax = t > tmax ? t : tmax;
+
+        var origin1 = dot( aabb1[0], bases[axis] ),
+            origin2 = dot( aabb1[1], bases[axis] );
+        if ( ( tmin > origin2 ) || tmax < origin1 ) {
+          return false;
+        }
+      } //for
+      return true;
+    },
+    intersectsAABB: function ( aabb1, aabb2 ) {
+      if ( aabbMath.containsPoint( aabb1, aabb2[0] ) || aabbMath.containsPoint( aabb1, aabb2[1] ) ) {
+        return true;
+      }
+      return aabbMath.overlaps( aabb1, aabb2 ) || aabbMath.overlaps( aabb2, aabb1 );
     }
   };
 
@@ -831,6 +897,6 @@ CubicVR.RegisterModule("Math",function (base) {
     Transform: Transform,
     Quaternion: Quaternion
   };
-  
+
   return extend;
 });

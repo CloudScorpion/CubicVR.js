@@ -394,7 +394,7 @@ CubicVR.RegisterModule("Worker", function(base) {
       this.nodes[node.id] = node;
     }
     else if (type === "cleaup") {
-      this.octree.cleanup();
+      this.octree.clean();
     } //if
   }; //onmessage
 

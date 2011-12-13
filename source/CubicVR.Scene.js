@@ -61,6 +61,8 @@ CubicVR.RegisterModule("Scene", function (base) {
         this.lMatrix = mat4.identity();
         this.tMatrix = mat4.identity();
 
+        this.octreeNode = CubicVR.Octree.Node();
+
         this.dirty = true;
 
         this.aabb = [];
@@ -113,7 +115,7 @@ CubicVR.RegisterModule("Scene", function (base) {
           this.obj = mesh;
         },
         getMesh: function() {
-          return this.obj;          
+          return this.obj;
         },
         getProperties: function() {
           return this.properties;
@@ -129,34 +131,34 @@ CubicVR.RegisterModule("Scene", function (base) {
         },
         getInstanceMaterials: function() {
           if (!this.obj) {
-            return null;            
+            return null;
           }
-          
+
           if (this.instanceMaterials) {
             return this.instanceMaterials;
-          } 
-          
+          }
+
           this.instanceMaterials = [];
-          
+
           for (var i = 0, iMax = this.obj.materials.length; i < iMax; i++) {
-            this.instanceMaterials[i] = this.obj.materials[i].clone();            
+            this.instanceMaterials[i] = this.obj.materials[i].clone();
           }
 
           return this.instanceMaterials;
         },
-        
+
         getInstanceMaterial: function(materialName) {
           var mInst = this.getInstanceMaterials();
-          
+
           for (var i = 0, iMax = mInst.length; i<iMax; i++) {
             if (mInst[i].name == materialName) {
               return mInst[i];
             }
           }
-          
+
           return null;
         },
-            
+
         setMorphSource: function (idx) {
             this.morphSource = idx;
         },
@@ -185,7 +187,7 @@ CubicVR.RegisterModule("Scene", function (base) {
           if (mat) {
             this.tMatrix = mat.slice(0);
             this.matrixLock = true;
-            
+
             if (this.hasEvents()) {
               var evh = this.getEventHandler();
               if (evh.hasEvent(enums.event.MATRIX_UPDATE)) {
@@ -197,7 +199,7 @@ CubicVR.RegisterModule("Scene", function (base) {
             this.matrixLock = false;
           }
         },
-        
+
         doTransform: function (mat) {
             var vec3 = CubicVR.vec3;
             if (!this.matrixLock && (!vec3.equal(this.lposition, this.position) || !vec3.equal(this.lrotation, this.rotation) || !vec3.equal(this.lscale, this.scale) || (mat !== undef))) {
@@ -228,7 +230,7 @@ CubicVR.RegisterModule("Scene", function (base) {
                 this.lscale[1] = this.scale[1];
                 this.lscale[2] = this.scale[2];
                 this.dirty = true;
-                
+
                 if (this.hasEvents()) {
                   var evh = this.getEventHandler();
                   if (evh.hasEvent(enums.event.MOVE)) {
@@ -328,8 +330,8 @@ CubicVR.RegisterModule("Scene", function (base) {
 
                 if (!this.obj || aabbMin === undef || aabbMax === undef) {
                     // aabbMin=[-1,-1,-1];
-                    // aabbMax=[1,1,1];      
-                    // 
+                    // aabbMax=[1,1,1];
+                    //
                     // if (this.obj.bb.length===0)
                     // {
                     this.aabb = [vec3.add([-1, -1, -1], this.position), vec3.add([1, 1, 1], this.position)];
@@ -523,7 +525,7 @@ CubicVR.RegisterModule("Scene", function (base) {
                     this.bindSceneObject(sceneObj.children[i], pickable, use_octree);
                 }
             }
-            
+
             return sceneObj;
         },
 
@@ -543,8 +545,8 @@ CubicVR.RegisterModule("Scene", function (base) {
               if (!this.lockRemovals) {
                 this.lockRemovals = [];
               }
-              
-              if (this.lockRemovals.indexOf(sceneObj)==-1) {             
+
+              if (this.lockRemovals.indexOf(sceneObj)==-1) {
                 this.lockRemovals.push(sceneObj);
               }
               return;
@@ -606,12 +608,12 @@ CubicVR.RegisterModule("Scene", function (base) {
             }
             this.camera = cameraObj;
         },
-        
+
         removeCamera: function (cameraObj) {  //todo: this
             if (typeof(cameraObj) !== 'object') {
-              cameraObj = this.getCamera(camName);              
+              cameraObj = this.getCamera(camName);
             }
-            
+
             if (this.cameras.indexOf(cameraObj) === -1) {
               this.cameras.push(cameraObj);
               this.camerasByName[cameraObj.name] = cameraObj;
@@ -622,19 +624,19 @@ CubicVR.RegisterModule("Scene", function (base) {
 
         setCamera: function(cameraObj) {
           if (!cameraObj) return;
-          
+
           if (typeof(cameraObj)!=='object') {
             cameraObj = this.getCamera(cameraObj);
           }
-          
+
           this.camera = cameraObj;
         },
-        
+
         getCamera: function(camName) {
           if (camName === undef) {
-            return this.camera;            
+            return this.camera;
           }
-          
+
           return this.camerasByName[camName];
         },
 
@@ -674,7 +676,7 @@ CubicVR.RegisterModule("Scene", function (base) {
             }
           }
           else {
-            sceneObj.doTransform();            
+            sceneObj.doTransform();
             if ( sceneObj.children ) {
               for (i = 0, iMax = sceneObj.children.length; i < iMax; i++) {
                 sceneObj.children[i].doTransform(sceneObj.tMatrix);
@@ -698,7 +700,7 @@ CubicVR.RegisterModule("Scene", function (base) {
               }
               this.shadows_updated = true;
             }
-            
+
             if (!base.features.lightShadows) return;
 
             // Begin experimental shadowing code..
@@ -740,7 +742,7 @@ CubicVR.RegisterModule("Scene", function (base) {
                 gl.viewport(dims[0], dims[1], dims[2], dims[3]);
             }
 
-            // End experimental shadow code..  
+            // End experimental shadow code..
         },
 
         updateCamera: function () {
@@ -762,10 +764,10 @@ CubicVR.RegisterModule("Scene", function (base) {
                 this.camera.setDimensions(w_in, h_in);
             }
         },
-        
+
         doTransform: function() {
              var use_octree = this.octree !== undef;
-       
+
              for (var i = 0, iMax = this.sceneObjects.length; i < iMax; i++) {
                 var scene_object = this.sceneObjects[i];
                 if (scene_object.parent !== null) {
@@ -853,9 +855,9 @@ CubicVR.RegisterModule("Scene", function (base) {
 
               sflip = false;
           } //if
-          
+
           var children = sceneObj.children;
-          
+
           if (renderChildren && children) {
               for (var i = 0, iMax = children.length; i < iMax; i++) {
                 var childObj = children[i];
@@ -865,9 +867,9 @@ CubicVR.RegisterModule("Scene", function (base) {
         },
         runEvents: function(currentTime) {
           var i,iMax;
-          
+
           this.lockState = true;
-          
+
           if (!!currentTime.getSeconds) {
             currentTime = currentTime.getSeconds();
           }
@@ -878,21 +880,21 @@ CubicVR.RegisterModule("Scene", function (base) {
                 scene_object.getEventHandler().update(currentTime);
               }
           }
-          
+
           this.lockState = false;
-          
+
           if (this.lockRemovals) {
             for (i = 0, iMax = this.lockRemovals.length; i<iMax; i++) {
               this.removeSceneObject(this.lockRemovals[i]);
             }
           }
-          
+
           this.lockRemovals = null;
-          
+
         },
         render: function () {
             ++this.frames;
-            
+
             var gl = GLCore.gl;
             var frustum_hits;
 
@@ -904,7 +906,7 @@ CubicVR.RegisterModule("Scene", function (base) {
 //                    light.doTransform();
 //                } //for
                 this.octree.reset_node_visibility();
-                this.octree.cleanup();
+                this.octree.clean();
                 frustum_hits = this.octree.get_frustum_hits(this.camera);
                 this.lights_rendered = frustum_hits.lights.length;
             } //if
@@ -913,10 +915,10 @@ CubicVR.RegisterModule("Scene", function (base) {
             this.updateCamera();
 
             this.updateShadows(true);
-            
+
             // TODO: temporary until dependent code is updated.
             this.shadows_updated = false;
-            
+
             var i, iMax;
             for (i = 0, iMax = this.lights.length; i < iMax; i++) {
                 var light = this.lights[i];
@@ -940,9 +942,9 @@ CubicVR.RegisterModule("Scene", function (base) {
             // TODO: sort transparencies..?
 
             for (i = 0, iMax = transparencies.length; i < iMax; i++) {
-                this.renderSceneObject(transparencies[i],this.camera,lights,false,false,true);                
+                this.renderSceneObject(transparencies[i],this.camera,lights,false,false,true);
             }
-            
+
             if (this.collect_stats) {
                 this.stats['objects.num_rendered'] = this.objects_rendered;
                 this.stats['lights.num_rendered'] = this.lights_rendered;
