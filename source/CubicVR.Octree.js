@@ -70,6 +70,13 @@ CubicVR.RegisterModule("Octree",function (base) {
     this.type = options.type;
     this.object = options.object;
     this.rootTree = undefined;
+    
+
+    
+    this.posSet = function( pos ) //This is a shortcut for now
+    {
+        position = pos;
+    };
 
     this.inserted = function( root ) {
       dirty = false;
@@ -79,6 +86,7 @@ CubicVR.RegisterModule("Octree",function (base) {
     }; //inserted
 
     Object.defineProperty( this, "aabb", {
+      configurable: true,
       get: function() {
         return aabb;
       },
@@ -121,6 +129,7 @@ CubicVR.RegisterModule("Octree",function (base) {
 
     this.adjust = function() {
       if ( !dirty ) return;
+      if (this.rootTree == undefined) return;
 
       var aabb = this.aabb,
           taabb = this.rootTree.aabb,
@@ -163,10 +172,14 @@ CubicVR.RegisterModule("Octree",function (base) {
       } //if
 
     }; //adjust
+    
+    //should have this global but w/e
+    this.reset = function() {CubicVR.aabb.reset(this.aabb, this.position);};
 
+    return this;
   }; //Node
 
-  var Octree = window.Octree = function( options ) {
+  var Octree = function( options ) {
 
     var Tree = function( options ) {
       options = options || {};
@@ -244,7 +257,7 @@ CubicVR.RegisterModule("Octree",function (base) {
         } //if
 
         var p = position,
-            aabb = node.getAABB(),
+            aabb = node.aabb,
             min = aabb[ 0 ],
             max = aabb[ 1 ],
             tNW = min[ 0 ] < p[ 0 ] && min[ 1 ] < p[ 1 ] && min[ 2 ] < p[ 2 ],
@@ -357,6 +370,16 @@ CubicVR.RegisterModule("Octree",function (base) {
 
   Octree.Node = Node;
   //Octree.enums = enums;
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
 function Frustum() {
   this.last_in = [];

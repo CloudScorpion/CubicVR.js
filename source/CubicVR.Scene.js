@@ -247,6 +247,7 @@ CubicVR.RegisterModule("Scene", function (base) {
         },
 
         adjust_octree: function () {
+            this.posSet(position);
             this.octreeNode.adjust();
             var aabb = this.getAABB();
             var taabb = this.octree_aabb;
@@ -479,7 +480,9 @@ CubicVR.RegisterModule("Scene", function (base) {
                     } //if
                     this.sceneObjectsById[obj.id] = obj;
                     aabbMath.reset(obj.octree_aabb, obj.position);
-                    this.octree.insert(obj);
+                    obj.octreeNode.posSet(obj.position);
+                    obj.octreeNode.reset();
+                    this.octree.insert(obj.octreeNode);
                     if (obj.octree_common_root === undefined || obj.octree_common_root === null) {
                         log("!!", obj.name, "octree_common_root is null");
                     } //if
@@ -518,8 +521,10 @@ CubicVR.RegisterModule("Scene", function (base) {
                     ++scene_object_uuid;
                 } //if
                 this.sceneObjectsById[sceneObj.id] = sceneObj;
+                sceneObj.octreeNode.posSet( sceneObj.position);
+                sceneObj.octreeNode.reset();
                 aabbMath.reset(sceneObj.octree_aabb, sceneObj.position);
-                this.octree.insert(sceneObj);
+                this.octree.insert(sceneObj.octreeNode);
             } //if
             if (sceneObj.children) {
                 for (var i = 0, iMax = sceneObj.children.length; i < iMax; i++) {
@@ -596,7 +601,8 @@ CubicVR.RegisterModule("Scene", function (base) {
                     if (lightObj.method === enums.light.method.DYNAMIC) {
                         this.dynamic_lights.push(lightObj);
                     } //if
-                    this.octree.insert_light(lightObj);
+                    //this.octree.insert_light(lightObj);
+                    //ignoring light implementation for now
                 } //if
             } //if
             this.lights = this.lights.sort(cubicvr_lightPackTypes);
@@ -778,9 +784,11 @@ CubicVR.RegisterModule("Scene", function (base) {
 
                 if (use_octree) {
                     lights = [];
-                    if (scene_object.dirty && scene_object.obj !== null) {
-                        scene_object.adjust_octree();
-                    } //if
+                    //if (scene_object.dirty && scene_object.obj !== null) {
+                    //    scene_object.adjust_octree();
+                    //add conditional for new one
+                    scene_object.octreeNode.adjust();
+                    //} //if
                     if (scene_object.visible === false || (use_octree && (scene_object.ignore_octree || scene_object.drawn_this_frame === true || scene_object.culled === true))) {
                         continue;
                     } //if
@@ -906,10 +914,10 @@ CubicVR.RegisterModule("Scene", function (base) {
 //                    var light = this.dynamic_lights[i];
 //                    light.doTransform();
 //                } //for
-                this.octree.reset_node_visibility();
+                //this.octree.reset_node_visibility();
                 this.octree.clean();
-                frustum_hits = this.octree.get_frustum_hits(this.camera);
-                this.lights_rendered = frustum_hits.lights.length;
+                //frustum_hits = this.octree.get_frustum_hits(this.camera);
+                //this.lights_rendered = frustum_hits.lights.length;
             } //if
 
             this.doTransform();
