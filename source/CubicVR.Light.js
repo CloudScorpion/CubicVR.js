@@ -54,7 +54,7 @@ CubicVR.RegisterModule("Light", function (base) {
         if (light_type === undef) {
             light_type = enums.light.type.POINT;
         }
-        
+
         if (lighting_method === undef) {
             lighting_method = enums.light.method.DYNAMIC;
         }
@@ -95,6 +95,8 @@ CubicVR.RegisterModule("Light", function (base) {
         }
 
         this.setType(this.light_type);
+        
+        this.octreeNode = CubicVR.Octree.Node();
 
         this.lposition = [0, 0, 0];
         this.dirty = true;
@@ -113,7 +115,8 @@ CubicVR.RegisterModule("Light", function (base) {
             [0, 0, 0]
         ];
         aabbMath.reset(this.aabb, this.position);
-        this.adjust_octree = CubicVR.SceneObject.prototype.adjust_octree;
+        //this.adjust_octree = CubicVR.SceneObject.prototype.adjust_octree;
+        this.adjust_octree = CubicVR.Octree.Node.adjust;
         this.motion = null;
         this.rotation = [0, 0, 0];
 
@@ -132,9 +135,9 @@ CubicVR.RegisterModule("Light", function (base) {
             if (light_type === enums.light.type.AREA && !base.features.lightShadows) {
                 this.dummyCam = new CubicVR.Camera();
                 this.areaCam = new CubicVR.Camera();
-                
+
                 this.updateAreaLight();
-                
+
                 this.dummyCam = null;
                 this.areaCam = null;
                 light_type = enums.light.type.DIRECTIONAL;
@@ -190,7 +193,7 @@ CubicVR.RegisterModule("Light", function (base) {
                   this.lPos = mat4.vec3_multiply(this.position, mat4.multiply(camera.mvMatrix,this.parent.tMatrix));
               } else if (ltype === enums.light.type.POINT) {
                   this.lPos = mat4.vec3_multiply(this.position, mat4.multiply(camera.mvMatrix,this.parent.tMatrix));
-              }     
+              }
             } else {
               if (ltype === enums.light.type.DIRECTIONAL) {
                   this.lDir = mat3.vec3_multiply(this.direction, camera.nMatrix);
@@ -202,7 +205,7 @@ CubicVR.RegisterModule("Light", function (base) {
               } else if (ltype === enums.light.type.AREA) {
                   this.lDir = mat3.vec3_multiply(this.direction, camera.nMatrix);
               }
-            }            
+            }
         },
 
         control: function (controllerId, motionId, value) {
@@ -310,7 +313,7 @@ CubicVR.RegisterModule("Light", function (base) {
         setShadow: function (map_res_in) // cone_tex
         {
             if (!base.features.lightShadows) return;
-            
+
             this.map_res = map_res_in;
             this.shadowMapTex = new CubicVR.RenderBuffer(this.map_res, this.map_res, true);
             this.shadowMapTex.texture.setFilter(enums.texture.filter.NEAREST);
@@ -329,11 +332,11 @@ CubicVR.RegisterModule("Light", function (base) {
         hasShadow: function () {
             return has_shadow;
         },
-        
+
         setProjector: function(projectorTex_in) {
           this.projectorTex = projectorTex_in;
         },
-        
+
         hasProjector: function() {
           return ((this.projectorTex!==null)?true:false);
         },
@@ -363,7 +366,7 @@ CubicVR.RegisterModule("Light", function (base) {
                var lPos = mat4.vec3_multiply(this.position, this.parent.tMatrix);
                this.dummyCam.lookat(this.position[0], this.position[1], this.position[2], this.position[0] + this.direction[0] * 10.0, this.position[1] + this.direction[1] * 10.0, this.position[2] + this.direction[2] * 10.0, 0, 1, 0);
                mat4.multiply(this.dummyCam.mvMatrix.slice(0),mat4.inverse(this.parent.tMatrix),this.dummyCam.mvMatrix);
-               
+
 //               this.dummyCam.lookat(lPos[0], lPos[1], lPos[2], lPos[0] + lDir[0] * 10.0, lPos[1] + lDir[1] * 10.0, lPos[2] + lDir[2] * 10.0, 0, 1, 0);
             } else {
               this.dummyCam.lookat(this.position[0], this.position[1], this.position[2], this.position[0] + this.direction[0] * 10.0, this.position[1] + this.direction[1] * 10.0, this.position[2] + this.direction[2] * 10.0, 0, 1, 0);
@@ -454,7 +457,7 @@ CubicVR.RegisterModule("Light", function (base) {
                 farclip += diff / Math.abs(this.direction[1]);
             }
 
-            //if (nearclip < 0.01) 
+            //if (nearclip < 0.01)
             nearclip = 0.01;
             this.dummyCam.nearclip = nearclip;
             this.dummyCam.farclip = farclip;

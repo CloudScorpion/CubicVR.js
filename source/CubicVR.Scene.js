@@ -247,6 +247,7 @@ CubicVR.RegisterModule("Scene", function (base) {
         },
 
         adjust_octree: function () {
+            this.octreeNode.adjust();
             var aabb = this.getAABB();
             var taabb = this.octree_aabb;
             var px0 = aabb[0][0];
