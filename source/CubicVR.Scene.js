@@ -62,30 +62,18 @@ CubicVR.RegisterModule("Scene", function (base) {
         this.tMatrix = mat4.identity();
 
         this.octreeNode = CubicVR.Octree.Node();
-
-        this.dirty = true;
-
-        this.aabb = [];
-
+        
         this.id = -1;
 
-        this.octree_leaves = [];
-        this.octree_common_root = null;
-        this.octree_aabb = [
-            [0, 0, 0],
-            [0, 0, 0]
-        ];
-        aabbMath.reset(this.octree_aabb, [0, 0, 0]);
-        this.ignore_octree = false;
         this.visible = true;
         this.culled = true;
         this.was_culled = true;
 
-        this.dynamic_lights = [];
-        this.static_lights = [];
-        this.matrixLock = false;
-        this.instanceMaterials = null;
-        this.eventHandler = null;
+        this.dynamic_lights = [];//
+        this.static_lights = [];//
+        this.matrixLock = false;//
+        this.instanceMaterials = null;//
+        this.eventHandler = null;//
     }
 
     SceneObject.prototype = {
@@ -229,7 +217,7 @@ CubicVR.RegisterModule("Scene", function (base) {
                 this.lscale[0] = this.scale[0];
                 this.lscale[1] = this.scale[1];
                 this.lscale[2] = this.scale[2];
-                this.dirty = true;
+                //this.dirty = true;//Make dirty tag for nodes
 
                 if (this.hasEvents()) {
                   var evh = this.getEventHandler();
@@ -249,45 +237,6 @@ CubicVR.RegisterModule("Scene", function (base) {
         adjust_octree: function () {
             this.posSet(position);
             this.octreeNode.adjust();
-            var aabb = this.getAABB();
-            var taabb = this.octree_aabb;
-            var px0 = aabb[0][0];
-            var py0 = aabb[0][1];
-            var pz0 = aabb[0][2];
-            var px1 = aabb[1][0];
-            var py1 = aabb[1][1];
-            var pz1 = aabb[1][2];
-            var tx0 = taabb[0][0];
-            var ty0 = taabb[0][1];
-            var tz0 = taabb[0][2];
-            var tx1 = taabb[1][0];
-            var ty1 = taabb[1][1];
-            var tz1 = taabb[1][2];
-            if (this.octree_leaves.length > 0 && (px0 < tx0 || py0 < ty0 || pz0 < tz0 || px1 > tx1 || py1 > ty1 || pz1 > tz1)) {
-                for (var i = 0; i < this.octree_leaves.length; ++i) {
-                    this.octree_leaves[i].remove(this);
-                } //for
-                this.octree_leaves = [];
-                this.static_lights = [];
-                var common_root = this.octree_common_root;
-                this.octree_common_root = null;
-                if (common_root !== null) {
-
-                    while (true) {
-                        if (!common_root.contains_point(aabb[0]) || !common_root.contains_point(aabb[1])) {
-                            if (common_root._root !== undef && common_root._root !== null) {
-                                common_root = common_root._root;
-                            } else {
-                                break;
-                            } //if
-                        } else {
-                            break;
-                        } //if
-                    } //while
-                    aabbMath.reset(this.octree_aabb, this.position);
-                    common_root.insert(this);
-                } //if
-            } //if
         },
         //SceneObject::adjust_octree
         bindChild: function (childSceneObj) {
@@ -310,98 +259,7 @@ CubicVR.RegisterModule("Scene", function (base) {
         },
 
         getAABB: function () {
-            var mat4 = CubicVR.mat4;
-            var vec3 = CubicVR.vec3;
-            if (this.dirty) {
-                var p = new Array(8);
-
-                this.doTransform();
-
-                var aabbMin;
-                var aabbMax;
-
-                if (this.obj) {
-                    if (!this.obj.bb) {
-                        this.aabb = [vec3.add([-1, -1, -1], this.position), vec3.add([1, 1, 1], this.position)];
-                        return this.aabb;
-                    }
-
-                    aabbMin = this.obj.bb[0];
-                    aabbMax = this.obj.bb[1];
-                }
-
-                if (!this.obj || aabbMin === undef || aabbMax === undef) {
-                    // aabbMin=[-1,-1,-1];
-                    // aabbMax=[1,1,1];
-                    //
-                    // if (this.obj.bb.length===0)
-                    // {
-                    this.aabb = [vec3.add([-1, -1, -1], this.position), vec3.add([1, 1, 1], this.position)];
-                    return this.aabb;
-                    // }
-                }
-
-/*
-        if (this.scale[0] !== 1 || this.scale[1] !== 1 || this.scale[2] !== 1) {
-          aabbMin[0] *= this.scale[0];
-          aabbMin[1] *= this.scale[1];
-          aabbMin[2] *= this.scale[2];
-          aabbMax[0] *= this.scale[0];
-          aabbMax[1] *= this.scale[1];
-          aabbMax[2] *= this.scale[2];
-        }
-        */
-
-                var obj_aabb = aabbMin;
-                var obj_bounds = vec3.subtract(aabbMax, aabbMin);
-
-                p[0] = [obj_aabb[0], obj_aabb[1], obj_aabb[2]];
-                p[1] = [obj_aabb[0], obj_aabb[1], obj_aabb[2] + obj_bounds[2]];
-                p[2] = [obj_aabb[0] + obj_bounds[0], obj_aabb[1], obj_aabb[2]];
-                p[3] = [obj_aabb[0] + obj_bounds[0], obj_aabb[1], obj_aabb[2] + obj_bounds[2]];
-                p[4] = [obj_aabb[0], obj_aabb[1] + obj_bounds[1], obj_aabb[2]];
-                p[5] = [obj_aabb[0], obj_aabb[1] + obj_bounds[1], obj_aabb[2] + obj_bounds[2]];
-                p[6] = [obj_aabb[0] + obj_bounds[0], obj_aabb[1] + obj_bounds[1], obj_aabb[2]];
-                p[7] = [obj_aabb[0] + obj_bounds[0], obj_aabb[1] + obj_bounds[1], obj_aabb[2] + obj_bounds[2]];
-
-                var aabbTest;
-
-                aabbTest = mat4.vec3_multiply(p[0], this.tMatrix);
-
-                aabbMin = [aabbTest[0], aabbTest[1], aabbTest[2]];
-                aabbMax = [aabbTest[0], aabbTest[1], aabbTest[2]];
-
-                for (var i = 1; i < 8; ++i) {
-                    aabbTest = mat4.vec3_multiply(p[i], this.tMatrix);
-
-                    if (aabbMin[0] > aabbTest[0]) {
-                        aabbMin[0] = aabbTest[0];
-                    }
-                    if (aabbMin[1] > aabbTest[1]) {
-                        aabbMin[1] = aabbTest[1];
-                    }
-                    if (aabbMin[2] > aabbTest[2]) {
-                        aabbMin[2] = aabbTest[2];
-                    }
-
-                    if (aabbMax[0] < aabbTest[0]) {
-                        aabbMax[0] = aabbTest[0];
-                    }
-                    if (aabbMax[1] < aabbTest[1]) {
-                        aabbMax[1] = aabbTest[1];
-                    }
-                    if (aabbMax[2] < aabbTest[2]) {
-                        aabbMax[2] = aabbTest[2];
-                    }
-                }
-
-                this.aabb[0] = aabbMin;
-                this.aabb[1] = aabbMax;
-
-                this.dirty = false;
-            }
-
-            return this.aabb;
+            return this.octreeNode.aabb;
         }
     };
 
@@ -479,12 +337,11 @@ CubicVR.RegisterModule("Scene", function (base) {
                         ++scene_object_uuid;
                     } //if
                     this.sceneObjectsById[obj.id] = obj;
-                    aabbMath.reset(obj.octree_aabb, obj.position);
                     obj.octreeNode.posSet(obj.position);
                     obj.octreeNode.reset();
                     this.octree.insert(obj.octreeNode);
-                    if (obj.octree_common_root === undefined || obj.octree_common_root === null) {
-                        log("!!", obj.name, "octree_common_root is null");
+                    if (obj.octreeNode.rootTree === undefined || obj.octreeNode.rootTree === null) {
+                        log("!!", obj.name, "node's rootTree is null");
                     } //if
                 } //for
             } //if
@@ -523,7 +380,6 @@ CubicVR.RegisterModule("Scene", function (base) {
                 this.sceneObjectsById[sceneObj.id] = sceneObj;
                 sceneObj.octreeNode.posSet( sceneObj.position);
                 sceneObj.octreeNode.reset();
-                aabbMath.reset(sceneObj.octree_aabb, sceneObj.position);
                 this.octree.insert(sceneObj.octreeNode);
             } //if
             if (sceneObj.children) {
@@ -581,15 +437,14 @@ CubicVR.RegisterModule("Scene", function (base) {
             }
 
             //todo: remove from octree!
-/*  if (this.octree !== undef && (use_octree === undef || use_octree === "true")) {
-        if (sceneObj.id < 0) {
-          sceneObj.id = scene_object_uuid;
-          ++scene_object_uuid;
-        } //if
-        this.sceneObjectsById[sceneObj.id] = sceneObj;
-        AABB_reset(sceneObj.octree_aabb, sceneObj.position);
-        this.octree.insert(sceneObj);
-      } //if */
+          if (this.octree !== undef && (use_octree === undef || use_octree === "true")) {
+            if (sceneObj.id >= 0) {
+                this.sceneObjectById[sceneObj.id] = null;//nulling out id refernce, id can't be reused
+            } //if
+            if(this.octree.rootTree !== undef){
+                this.octree.rootTree.remove(sceneObj.octreeNode);
+            }
+          } //if */
         },
 
         bindLight: function (lightObj, use_octree) {
@@ -602,7 +457,7 @@ CubicVR.RegisterModule("Scene", function (base) {
                         this.dynamic_lights.push(lightObj);
                     } //if
                     //this.octree.insert_light(lightObj);
-                    //ignoring light implementation for now
+                    //ignoring light implementation for now, doesn't seem supported by new impl
                 } //if
             } //if
             this.lights = this.lights.sort(cubicvr_lightPackTypes);
@@ -789,9 +644,9 @@ CubicVR.RegisterModule("Scene", function (base) {
                     //add conditional for new one
                     scene_object.octreeNode.adjust();
                     //} //if
-                    if (scene_object.visible === false || (use_octree && (scene_object.ignore_octree || scene_object.drawn_this_frame === true || scene_object.culled === true))) {
-                        continue;
-                    } //if
+                    //if (scene_object.visible === false || (use_octree && (scene_object.ignore_octree || scene_object.drawn_this_frame === true || scene_object.culled === true))) {
+                    //    continue;//should likely be reimplemented with new system at some point
+                    //} //if
                     //lights = frustum_hits.lights;
                     lights = scene_object.dynamic_lights;
                     //lights = this.lights;
