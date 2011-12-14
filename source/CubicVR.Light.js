@@ -96,7 +96,8 @@ CubicVR.RegisterModule("Light", function (base) {
 
         this.setType(this.light_type);
         
-        this.octreeNode = CubicVR.Octree.Node();
+        //no light implementation yet
+        //this.octreeNode = CubicVR.Octree.Node();
 
         this.lposition = [0, 0, 0];
         this.dirty = true;

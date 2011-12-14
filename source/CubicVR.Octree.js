@@ -5,7 +5,6 @@ CubicVR.RegisterModule("Octree",function (base) {
   var Plane = CubicVR.plane;
   var Sphere = CubicVR.sphere;
   var enums = CubicVR.enums;
-  var aabbbMath = CubicVR.aabb;
   var dot = CubicVR.vec3.dot;
   var planeMath = CubicVR.vec3;
 
@@ -64,8 +63,7 @@ CubicVR.RegisterModule("Octree",function (base) {
     var leaves = [],
         that = this,
         aabb,
-        dirty = true,
-        position;
+        dirty = true;
 
     this.type = options.type;
     this.object = options.object;
@@ -79,7 +77,6 @@ CubicVR.RegisterModule("Octree",function (base) {
     };
 
     this.inserted = function( root ) {
-      dirty = false;
       if ( options.inserted ) {
         options.inserted( root );
       } //if
@@ -88,30 +85,104 @@ CubicVR.RegisterModule("Octree",function (base) {
     Object.defineProperty( this, "aabb", {
       configurable: true,
       get: function() {
-        return aabb;
+            var mat4 = CubicVR.mat4;
+            var vec3 = CubicVR.vec3;
+            if (dirty) {
+                var p = new Array(8);
+
+                that.object.doTransform();
+
+                var aabbMin;
+                var aabbMax;
+
+                if (that.object.obj) {
+                    if (!that.object.obj.bb) {
+                        aabb = [vec3.add([-1, -1, -1], that.object.position), vec3.add([1, 1, 1], that.object.position)];
+                        return aabb;
+                    }
+
+                    aabbMin = that.object.obj.bb[0];
+                    aabbMax = that.object.obj.bb[1];
+                }
+
+                if (!that.object.obj || aabbMin === undef || aabbMax === undef) {
+                    aabb = [vec3.add([-1, -1, -1], that.object.position), vec3.add([1, 1, 1], that.object.position)];
+                    return aabb;
+                }
+
+                var obj_aabb = aabbMin;
+                var obj_bounds = vec3.subtract(aabbMax, aabbMin);
+
+                p[0] = [obj_aabb[0], obj_aabb[1], obj_aabb[2]];
+                p[1] = [obj_aabb[0], obj_aabb[1], obj_aabb[2] + obj_bounds[2]];
+                p[2] = [obj_aabb[0] + obj_bounds[0], obj_aabb[1], obj_aabb[2]];
+                p[3] = [obj_aabb[0] + obj_bounds[0], obj_aabb[1], obj_aabb[2] + obj_bounds[2]];
+                p[4] = [obj_aabb[0], obj_aabb[1] + obj_bounds[1], obj_aabb[2]];
+                p[5] = [obj_aabb[0], obj_aabb[1] + obj_bounds[1], obj_aabb[2] + obj_bounds[2]];
+                p[6] = [obj_aabb[0] + obj_bounds[0], obj_aabb[1] + obj_bounds[1], obj_aabb[2]];
+                p[7] = [obj_aabb[0] + obj_bounds[0], obj_aabb[1] + obj_bounds[1], obj_aabb[2] + obj_bounds[2]];
+
+                var aabbTest;
+
+                aabbTest = mat4.vec3_multiply(p[0], that.object.tMatrix);
+
+                aabbMin = [aabbTest[0], aabbTest[1], aabbTest[2]];
+                aabbMax = [aabbTest[0], aabbTest[1], aabbTest[2]];
+
+                for (var i = 1; i < 8; ++i) {
+                    aabbTest = mat4.vec3_multiply(p[i], that.object.tMatrix);
+
+                    if (aabbMin[0] > aabbTest[0]) {
+                        aabbMin[0] = aabbTest[0];
+                    }
+                    if (aabbMin[1] > aabbTest[1]) {
+                        aabbMin[1] = aabbTest[1];
+                    }
+                    if (aabbMin[2] > aabbTest[2]) {
+                        aabbMin[2] = aabbTest[2];
+                    }
+
+                    if (aabbMax[0] < aabbTest[0]) {
+                        aabbMax[0] = aabbTest[0];
+                    }
+                    if (aabbMax[1] < aabbTest[1]) {
+                        aabbMax[1] = aabbTest[1];
+                    }
+                    if (aabbMax[2] < aabbTest[2]) {
+                        aabbMax[2] = aabbTest[2];
+                    }
+                }
+
+                aabb[0] = aabbMin;
+                aabb[1] = aabbMax;
+
+                dirty = false;
+            }
+
+            return aabb;
       },
       set: function( val ) {
         dirty = true;
         aabb = val;
-        position = [
+        /*position = [
           aabb[ 0 ][ 0 ] + ( aabb[ 1 ][ 0 ] - aabb[ 0 ][ 0 ] ) / 2,
           aabb[ 0 ][ 1 ] + ( aabb[ 1 ][ 0 ] - aabb[ 0 ][ 1 ] ) / 2,
           aabb[ 0 ][ 2 ] + ( aabb[ 1 ][ 0 ] - aabb[ 0 ][ 2 ] ) / 2
-        ];
+        ];*///can't be used for now
       }
     });
 
     that.aabb = options.aabb || [ [ 0, 0, 0 ], [ 0, 0, 0 ] ];
 
-    var octreeAABB = position.slice();
+    var octreeAABB = that.object.position.slice();
 
     this.addLeaf = function( tree ) {
       var idx = leaves.indexOf( tree );
       if ( idx === -1 ) {
         leaves.push( tree );
         var treeAABB = tree.aabb;
-        aabbMath.engulf( octreeAABB, treeAABB[0] );
-        aabbMath.engulf( octreeAABB, treeAABB[1] );
+        CubicVR.aabb.engulf( octreeAABB, treeAABB[0] );
+        CubicVR.aabb.engulf( octreeAABB, treeAABB[1] );
       } //if
     }; //addLead
 
@@ -153,8 +224,8 @@ CubicVR.RegisterModule("Octree",function (base) {
 
           while ( true ) {
             var oldRootAABB = oldRootTree.aabb;
-            if ( !aabbMath.containsPoint( aabb[ 0 ], oldRootAABB ) ||
-                 !aabbMath.containsPoint( aabb[ 1 ], oldRootAABB ) ) {
+            if ( !CubicVR.aabb.containsPoint( aabb[ 0 ], oldRootAABB ) ||
+                 !CubicVR.aabb.containsPoint( aabb[ 1 ], oldRootAABB ) ) {
               if ( oldRootTree.root !== undefined ) {
                 oldRootTree = oldRootTree.root;
               }
@@ -166,7 +237,7 @@ CubicVR.RegisterModule("Octree",function (base) {
               break;
             } //if
           } //while
-          aabbMath.reset( octreeAABB, position );
+          CubicVR.aabb.reset( octreeAABB, that.object.position );
           oldRootTree.insert( that );
         } //if
       } //if
@@ -174,7 +245,7 @@ CubicVR.RegisterModule("Octree",function (base) {
     }; //adjust
     
     //should have this global but w/e
-    this.reset = function() {CubicVR.aabb.reset(this.aabb, this.position);};
+    //this.reset = function() {CubicVR.aabb.reset(this.aabb, this.position);};
 
     return this;
   }; //Node
@@ -369,26 +440,16 @@ CubicVR.RegisterModule("Octree",function (base) {
   }; //Octree
 
   Octree.Node = Node;
-  //Octree.enums = enums;
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-function Frustum() {
+  //Octree.enums = enums
+
+var Frustum = function() {
   this.last_in = [];
   this._planes = [];
   this.sphere = null;
   for (var i = 0; i < 6; ++i) {
     this._planes[i] = [0, 0, 0, 0];
   } //for
-} //Frustum::Constructor
+}; //Frustum::Constructor
 Frustum.prototype.extract = function(camera, mvMatrix, pMatrix) {
   var mat4 = CubicVR.mat4,
       vec3 = CubicVR.vec3;

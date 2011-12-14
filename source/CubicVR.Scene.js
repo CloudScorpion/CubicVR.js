@@ -61,7 +61,7 @@ CubicVR.RegisterModule("Scene", function (base) {
         this.lMatrix = mat4.identity();
         this.tMatrix = mat4.identity();
 
-        this.octreeNode = CubicVR.Octree.Node();
+        this.octreeNode = CubicVR.Octree.Node({object: this});
         
         this.id = -1;
 
@@ -338,7 +338,7 @@ CubicVR.RegisterModule("Scene", function (base) {
                     } //if
                     this.sceneObjectsById[obj.id] = obj;
                     obj.octreeNode.posSet(obj.position);
-                    obj.octreeNode.reset();
+                    //obj.octreeNode.reset();
                     this.octree.insert(obj.octreeNode);
                     if (obj.octreeNode.rootTree === undefined || obj.octreeNode.rootTree === null) {
                         log("!!", obj.name, "node's rootTree is null");
@@ -379,7 +379,7 @@ CubicVR.RegisterModule("Scene", function (base) {
                 } //if
                 this.sceneObjectsById[sceneObj.id] = sceneObj;
                 sceneObj.octreeNode.posSet( sceneObj.position);
-                sceneObj.octreeNode.reset();
+                //sceneObj.octreeNode.reset();
                 this.octree.insert(sceneObj.octreeNode);
             } //if
             if (sceneObj.children) {
@@ -704,11 +704,11 @@ CubicVR.RegisterModule("Scene", function (base) {
               if (sceneObj.instanceMaterials) {
                   mesh.bindInstanceMaterials(sceneObj.instanceMaterials);
               }
-
+              
               if (CubicVR.renderObject(mesh, camera, sceneObj.tMatrix, lights, skip_trans, skip_solid) && transparencies) {
                   transparencies.push(sceneObj);
               }
-
+              
               if (sceneObj.instanceMaterials) {
                   mesh.bindInstanceMaterials(null);
               }
@@ -793,16 +793,28 @@ CubicVR.RegisterModule("Scene", function (base) {
             var lights_list = [];
             var transparencies = [];
             var lights = this.lights;
+            
+            //debug code
+            var skipped = 0;
 
             for (i = 0, iMax = this.sceneObjects.length; i < iMax; i++) {
                 var scene_object = this.sceneObjects[i];
                 if (scene_object.visible === false || scene_object.parent !== null) {
                     continue;
                 } //if
-
-                this.renderSceneObject(scene_object,this.camera,lights,true,true,false,transparencies);
+                if(this.camera.frustum.contains_box(scene_object.octreeNode.aabb) === 1){
+                    this.renderSceneObject(scene_object,this.camera,lights,true,true,false,transparencies);
+                } else {
+                    skipped++;
+                }
             } //for
-
+            
+            //debug
+            if(skipped === 0)
+                {
+                console.log("zero nodes skipped");   
+                }
+            
             // TODO: sort transparencies..?
 
             for (i = 0, iMax = transparencies.length; i < iMax; i++) {

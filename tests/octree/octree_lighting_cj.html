@@ -56,7 +56,7 @@
 		      return;
 		    } //if
 
-        octree = new CubicVR.Octree(300, 4);
+        octree = new CubicVR.Octree({size:300, depth:4});
         scene = new CubicVR.Scene(canvas.width, canvas.height, 40, 0.1, 400, octree);
 
         var box_material = new CubicVR.Material("test");
